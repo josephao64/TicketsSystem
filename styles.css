@@ -19,24 +19,22 @@ h1 {
 
 .container {
   width: 90%;
-  max-width: 1200px; /* Aumentar el ancho máximo para pantallas grandes */
+  max-width: 1000px;
   margin: 20px auto;
   background-color: #fff;
   padding: 20px;
   box-shadow: 0 0 10px #ccc;
-  border-radius: 8px; /* Bordes redondeados */
 }
 
 button {
   background-color: #007bff;
   color: #fff;
   border: none;
-  padding: 12px 20px; /* Mayor tamaño para mejor accesibilidad en móviles */
+  padding: 10px 15px;
   margin: 5px 0;
   cursor: pointer;
   font-size: 16px;
   border-radius: 4px;
-  transition: background-color 0.3s ease;
 }
 
 button:hover {
@@ -56,7 +54,7 @@ input[type="password"],
 select,
 textarea {
   width: 100%;
-  padding: 10px;
+  padding: 8px;
   margin: 5px 0 15px 0;
   border: 1px solid #ccc;
   font-size: 16px;
@@ -85,14 +83,9 @@ label {
 
 /* Estilos para el formulario de inicio de sesión */
 #login-container {
-  width: 90%;
-  max-width: 400px;
+  width: 300px;
   margin: 50px auto;
   text-align: center;
-  background-color: #fff;
-  padding: 20px;
-  box-shadow: 0 0 10px #ccc;
-  border-radius: 8px;
 }
 
 #login-container select,
@@ -106,21 +99,19 @@ label {
 
 /* Estilos para el panel de administración, encargado y auxiliar */
 #logout-button {
-  position: fixed; /* Fijo para que siempre esté visible */
+  position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 1000; /* Por encima de otros elementos */
 }
 
 #create-ticket-button {
-  position: fixed; /* Fijo para que siempre esté visible */
+  position: fixed;
   top: 20px;
   left: 20px;
-  z-index: 1000; /* Por encima de otros elementos */
 }
 
 section {
-  margin: 80px 0 20px 0; /* Ajustar margen superior para espacio de botones fijos */
+  margin: 20px 0;
 }
 
 section h2 {
@@ -152,19 +143,17 @@ section h2 {
 .ticket-format {
   background-color: white;
   width: 90%;
-  max-width: 500px; /* Ajustar para pantallas pequeñas */
+  max-width: 450px;
   border: 1px solid #ccc;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   padding: 20px;
   margin: 20px auto;
-  border-radius: 8px;
 }
 
 .ticket-format header {
   display: flex;
-  flex-direction: column; /* Apilar elementos en móviles */
+  flex-direction: column;
   align-items: center;
-  text-align: center;
 }
 
 .ticket-format header .branch {
@@ -182,7 +171,6 @@ section h2 {
 .ticket-format .content h2 {
   border-bottom: 1px solid black;
   padding-bottom: 10px;
-  text-align: center;
 }
 
 .ticket-format .description-box {
@@ -195,18 +183,17 @@ section h2 {
 
 .ticket-format .footer {
   display: flex;
-  flex-direction: column; /* Apilar en móviles */
-  gap: 10px;
+  flex-direction: column;
+  align-items: center;
   margin-top: 20px;
 }
 
 .ticket-format .footer p {
-  margin: 0;
+  margin: 5px 0;
 }
 
 .ticket-format .ticket-image {
   margin-top: 15px;
-  text-align: center;
 }
 
 .ticket-format .ticket-image img {
@@ -227,32 +214,16 @@ section h2 {
   background-color: #17a2b8;
 }
 
-.assign-button:hover {
-  background-color: #117a8b;
-}
-
 .edit-ticket-button {
   background-color: #ffc107;
-}
-
-.edit-ticket-button:hover {
-  background-color: #e0a800;
 }
 
 .delete-ticket-button {
   background-color: #dc3545;
 }
 
-.delete-ticket-button:hover {
-  background-color: #c82333;
-}
-
 .share-button {
   background-color: #28a745;
-}
-
-.share-button:hover {
-  background-color: #218838;
 }
 
 .show-ticket-button {
@@ -268,7 +239,7 @@ section h2 {
 .modal {
   display: none; /* Oculto por defecto */
   position: fixed; /* Fijo */
-  z-index: 1001; /* Por encima de otros elementos */
+  z-index: 1; /* Por encima de otros elementos */
   left: 0;
   top: 0;
   width: 100%; /* Ancho completo */
@@ -282,12 +253,11 @@ section h2 {
   margin: 5% auto; /* Centrado verticalmente */
   padding: 20px;
   border: 1px solid #888;
-  width: 90%; /* Ancho en móviles */
+  width: 90%; /* Ancho */
   max-width: 500px;
   border-radius: 8px;
 }
 
-/* Close button */
 .close {
   color: #aaa;
   float: right;
@@ -304,6 +274,16 @@ section h2 {
 
 /* Estilos para dispositivos móviles */
 @media (max-width: 768px) {
+  #logout-button,
+  #create-ticket-button {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    margin: 5px;
+  }
+
   .ticket-format {
     width: 95%;
   }
@@ -316,37 +296,33 @@ section h2 {
     flex-direction: column;
   }
 
-  #logout-button,
-  #create-ticket-button {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    width: calc(100% - 20px);
+  .ticket-format .footer p {
+    text-align: center;
   }
 
-  #create-ticket-button {
-    top: 60px;
+  table, th, td {
+    font-size: 14px;
   }
 }
 
-/* Estilos para pantallas muy pequeñas */
+/* Estilos para pantallas pequeñas */
 @media (max-width: 480px) {
   button {
-    padding: 10px 15px;
     font-size: 14px;
+    padding: 8px 12px;
   }
 
   .ticket-format {
     padding: 15px;
   }
 
-  .ticket-format header .branch {
-    font-size: 1.2em;
+  .modal-content {
+    width: 95%;
+    margin: 10% auto;
   }
 
-  .ticket-format .footer p {
-    font-size: 14px;
+  .image-preview img {
+    max-height: 150px;
   }
 }
 
@@ -361,4 +337,45 @@ section h2 {
   max-height: 200px;
   border: 1px solid #ccc;
   border-radius: 4px;
+}
+
+/* Estilos para la tabla */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table, th, td {
+  border: 1px solid #ddd;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+}
+
+th {
+  background-color: #007bff;
+  color: white;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+tr:hover {
+  background-color: #ddd;
+}
+
+/* Colores según el estado del ticket */
+.status-abierto {
+  background-color: #f8d7da !important; /* Rojo claro */
+}
+
+.status-en-proceso {
+  background-color: #fff3cd !important; /* Amarillo claro */
+}
+
+.status-terminado {
+  background-color: #d4edda !important; /* Verde claro */
 }
