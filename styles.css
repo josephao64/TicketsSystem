@@ -330,3 +330,16 @@ tr:hover {
 .status-terminado {
   background-color: #d4edda !important; /* Verde claro */
 }
+
+/* Estilos para la vista previa de la imagen */
+.image-preview {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}

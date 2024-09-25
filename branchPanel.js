@@ -1,4 +1,5 @@
 // branchPanel.js
+
 import { db, storage } from './firebaseConfig.js';
 import { 
   collection, 
@@ -26,6 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const modalCloseButton = createTicketModal.querySelector('.close');
   const takePhotoButton = document.getElementById('take-photo-button');
   const ticketImageInput = document.getElementById('ticket-image');
+  const imagePreviewDiv = document.getElementById('image-preview'); // Añadir en HTML si usas vista previa
 
   let currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
@@ -70,6 +72,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     ticketImageInput.click();
   });
 
+  // Mostrar vista previa de la imagen seleccionada
+  ticketImageInput.addEventListener('change', () => {
+    const file = ticketImageInput.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imagePreviewDiv.innerHTML = `<img src="${e.target.result}" alt="Vista Previa" />`;
+      };
+      reader.readAsDataURL(file);
+    } else {
+      imagePreviewDiv.innerHTML = '';
+    }
+  });
+
   // Crear nuevo ticket
   createTicketForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -77,6 +93,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const description = document.getElementById('ticket-description').value.trim();
     const priority = document.getElementById('ticket-priority').value;
     const imageFile = ticketImageInput.files[0];
+
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
     if (!title || !description) {
       Swal.fire({
@@ -87,7 +105,36 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    // Validar tamaño de la imagen
+    if (imageFile && imageFile.size > MAX_FILE_SIZE) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Imagen Demasiado Grande',
+        text: 'La imagen seleccionada excede el tamaño máximo permitido de 5MB.'
+      });
+      return;
+    }
+
+    // Validar tipo de archivo
+    if (imageFile && !imageFile.type.startsWith('image/')) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Tipo de Archivo No Válido',
+        text: 'Por favor, sube solo archivos de imagen.'
+      });
+      return;
+    }
+
     try {
+      Swal.fire({
+        title: 'Creando Ticket...',
+        text: 'Por favor, espera mientras se crea tu ticket.',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
       // Obtener el siguiente ID numérico para el ticket
       const nextId = await getNextTicketId();
 
@@ -122,6 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       createTicketForm.reset();
+      imagePreviewDiv.innerHTML = '';
       createTicketModal.style.display = 'none';
       // Actualizar la lista de tickets
       loadMyTickets();
