@@ -1,5 +1,5 @@
 // branchPanel.js
-import { db } from './firebaseConfig.js';
+import { db, storage } from './firebaseConfig.js';
 import { 
   collection, 
   getDocs, 
@@ -14,6 +14,7 @@ import {
   updateDoc,
   deleteDoc 
 } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const logoutButton = document.getElementById('logout-button');
@@ -23,6 +24,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const myTicketsDiv = document.getElementById('my-tickets');
   const filterButtons = document.querySelectorAll('.filter-button');
   const modalCloseButton = createTicketModal.querySelector('.close');
+  const takePhotoButton = document.getElementById('take-photo-button');
+  const ticketImageInput = document.getElementById('ticket-image');
 
   let currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
@@ -62,12 +65,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // Tomar foto y adjuntarla al input de imagen
+  takePhotoButton.addEventListener('click', () => {
+    ticketImageInput.click();
+  });
+
   // Crear nuevo ticket
   createTicketForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const title = document.getElementById('ticket-title').value.trim();
     const description = document.getElementById('ticket-description').value.trim();
     const priority = document.getElementById('ticket-priority').value;
+    const imageFile = ticketImageInput.files[0];
 
     if (!title || !description) {
       Swal.fire({
@@ -81,6 +90,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       // Obtener el siguiente ID numérico para el ticket
       const nextId = await getNextTicketId();
+
+      let imageUrl = null;
+      if (imageFile) {
+        // Comprimir y redimensionar la imagen
+        imageUrl = await processAndUploadImage(imageFile, nextId);
+      }
 
       // Obtener fecha y hora actuales
       const createdAt = Timestamp.now();
@@ -96,7 +111,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         emittedBy: currentUser.username,
         empresa: currentUser.empresa,
         sucursal: currentUser.sucursal,
-        assignedTo: null
+        assignedTo: null,
+        imageUrl // Guardar la URL de la imagen si se adjuntó
       });
 
       Swal.fire({
@@ -130,6 +146,54 @@ document.addEventListener('DOMContentLoaded', async () => {
       const lastTicket = querySnapshot.docs[0].data();
       return lastTicket.id + 1;
     }
+  }
+
+  // Función para comprimir y redimensionar la imagen
+  async function processAndUploadImage(file, ticketId) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        img.src = e.target.result;
+      };
+
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800; // Ancho máximo
+        const scaleSize = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scaleSize;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Convertir el canvas a Blob con calidad ajustada
+        canvas.toBlob(async (blob) => {
+          try {
+            // Crear una referencia en Firebase Storage
+            const imageRef = ref(storage, `tickets/${currentUser.username}/${ticketId}_${file.name}`);
+
+            // Subir la imagen
+            await uploadBytes(imageRef, blob, { contentType: file.type });
+
+            // Obtener la URL de descarga
+            const downloadURL = await getDownloadURL(imageRef);
+            resolve(downloadURL);
+          } catch (uploadError) {
+            console.error('Error al subir la imagen:', uploadError);
+            reject(uploadError);
+          }
+        }, 'image/jpeg', 0.7); // Ajusta la calidad aquí (0.7 = 70%)
+      };
+
+      img.onerror = (error) => {
+        console.error('Error al cargar la imagen:', error);
+        reject(error);
+      };
+
+      reader.readAsDataURL(file);
+    });
   }
 
   // Cargar los tickets del encargado
@@ -227,13 +291,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           width: '600px',
           showCloseButton: true,
           showCancelButton: true,
-          showConfirmButton: true,
-          confirmButtonText: 'Descargar Ticket',
-          cancelButtonText: 'Compartir Ticket',
           focusConfirm: false,
-          preConfirm: () => {
-            // No hacer nada aquí
-          }
+          confirmButtonText: 'Descargar Ticket',
+          cancelButtonText: 'Compartir Ticket'
         }).then(async (result) => {
           if (result.isConfirmed) {
             // Descargar la imagen
@@ -267,22 +327,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (ticketDoc.exists()) {
         const ticketData = ticketDoc.data();
         const ticketElement = document.createElement('div');
-        ticketElement.style.position = 'absolute';
-        ticketElement.style.top = '-9999px'; // Posicionar fuera de la vista
+        ticketElement.style.display = 'none'; // Ocultar el elemento
         ticketElement.innerHTML = generateTicketHTML(ticketData);
         document.body.appendChild(ticketElement);
-
-        // Esperar un breve momento para asegurar que el DOM esté actualizado
-        await new Promise(resolve => setTimeout(resolve, 100));
 
         // Convertir el ticket a imagen
         const canvas = await html2canvas(ticketElement, { useCORS: true });
         const imgData = canvas.toDataURL('image/png');
-
-        // Verificar que imgData no esté vacío
-        if (!imgData || imgData.length === 0) {
-          throw new Error('No se pudo generar la imagen del ticket.');
-        }
 
         // Descargar la imagen
         const link = document.createElement('a');
@@ -320,11 +371,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Función para compartir la imagen del ticket usando la API Web Share
   async function shareTicketImage(ticketId) {
     if (!navigator.canShare || !navigator.canShare({ files: [] })) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Compartir no soportado',
-        text: 'Tu navegador no soporta la API de Web Share.'
-      });
+      // Alternativa: copiar la URL de la imagen al portapapeles
+      try {
+        const ticketDoc = await getDoc(doc(db, 'tickets', ticketId));
+        if (ticketDoc.exists()) {
+          const ticketData = ticketDoc.data();
+          if (ticketData.imageUrl) {
+            await navigator.clipboard.writeText(ticketData.imageUrl);
+            Swal.fire({
+              icon: 'success',
+              title: 'URL Copiada',
+              text: 'La URL de la imagen del ticket ha sido copiada al portapapeles.'
+            });
+          } else {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Sin Imagen',
+              text: 'Este ticket no tiene una imagen adjunta para compartir.'
+            });
+          }
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Ticket no encontrado.'
+          });
+        }
+      } catch (error) {
+        console.error('Error al copiar la URL:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: `Error al copiar la URL: ${error.message}`
+        });
+      }
       return;
     }
 
@@ -332,27 +412,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       const ticketDoc = await getDoc(doc(db, 'tickets', ticketId));
       if (ticketDoc.exists()) {
         const ticketData = ticketDoc.data();
-        const ticketElement = document.createElement('div');
-        ticketElement.style.position = 'absolute';
-        ticketElement.style.top = '-9999px'; // Posicionar fuera de la vista
-        ticketElement.innerHTML = generateTicketHTML(ticketData);
-        document.body.appendChild(ticketElement);
-
-        // Esperar un breve momento para asegurar que el DOM esté actualizado
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // Convertir el ticket a imagen
-        const canvas = await html2canvas(ticketElement, { useCORS: true });
-        const imgData = canvas.toDataURL('image/png');
-
-        // Verificar que imgData no esté vacío
-        if (!imgData || imgData.length === 0) {
-          throw new Error('No se pudo generar la imagen del ticket.');
+        if (!ticketData.imageUrl) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Sin Imagen',
+            text: 'Este ticket no tiene una imagen adjunta para compartir.'
+          });
+          return;
         }
 
-        // Convertir la data URL a Blob
-        const res = await fetch(imgData);
-        const blob = await res.blob();
+        const imageURL = ticketData.imageUrl;
+
+        // Descargar la imagen para compartir
+        const response = await fetch(imageURL, { mode: 'cors' });
+        const blob = await response.blob();
         const file = new File([blob], `Ticket_${ticketData.id}.png`, { type: 'image/png' });
 
         // Compartir usando la API Web Share
@@ -363,9 +436,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         await navigator.share(shareData);
-
-        // Remover el elemento temporal
-        document.body.removeChild(ticketElement);
 
         Swal.fire({
           icon: 'success',
@@ -394,25 +464,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     const date = ticket.createdAt.toDate ? ticket.createdAt.toDate() : ticket.createdAt;
     const formattedDate = new Date(date).toLocaleString('es-ES');
     return `
-      <div class="ticket-format">
-        <header>
-          <p class="branch">Sucursal: ${ticket.sucursal}</p>
-          <h1 class="brand">${ticket.empresa}</h1>
-        </header>
-        <div class="content">
-          <h2>Ticket #${ticket.id}</h2>
-          <p><strong>Fecha de Emisión:</strong> ${formattedDate}</p>
-          <div class="title"><strong>Título:</strong> ${ticket.title}</div>
-          <div class="description">
-            <p><strong>Descripción:</strong></p>
-            <div class="description-box">${ticket.description}</div>
-          </div>
-          <div class="footer">
-            <p><strong>Prioridad:</strong> ${ticket.priority}</p>
-            <p><strong>Estado:</strong> ${ticket.status}</p>
-          </div>
+    <div class="ticket-format">
+      <header>
+        <p class="branch">Sucursal: ${ticket.sucursal}</p>
+        <h1 class="brand">${ticket.empresa}</h1>
+      </header>
+      <div class="content">
+        <h2>Ticket #${ticket.id}</h2>
+        <p><strong>Fecha de Emisión:</strong> ${formattedDate}</p>
+        <div class="title"><strong>Título:</strong> ${ticket.title}</div>
+        <div class="description">
+          <p><strong>Descripción:</strong></p>
+          <div class="description-box">${ticket.description}</div>
         </div>
+        <div class="footer">
+          <p><strong>Prioridad:</strong> ${ticket.priority}</p>
+          <p><strong>Estado:</strong> ${ticket.status}</p>
+        </div>
+        ${ticket.imageUrl ? `<div class="ticket-image"><img src="${ticket.imageUrl}" alt="Imagen del Ticket"></div>` : ''}
       </div>
+    </div>
     `;
   }
 });

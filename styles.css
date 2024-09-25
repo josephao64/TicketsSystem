@@ -41,6 +41,14 @@ button:hover {
   background-color: #0056b3;
 }
 
+.secondary-button {
+  background-color: #6c757d;
+}
+
+.secondary-button:hover {
+  background-color: #5a6268;
+}
+
 input[type="text"],
 input[type="password"],
 select,
@@ -274,6 +282,11 @@ section h2 {
   table {
     width: 100%;
     font-size: 14px;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 5% auto;
   }
 }
 
