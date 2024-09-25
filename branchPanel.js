@@ -1,19 +1,40 @@
 // branchPanel.js
 import { db } from './firebaseConfig.js';
-import { collection, getDocs, query, where, doc, setDoc, orderBy, limit, Timestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  where, 
+  doc, 
+  setDoc, 
+  orderBy, 
+  limit, 
+  Timestamp, 
+  getDoc,
+  updateDoc,
+  deleteDoc 
+} from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const logoutButton = document.getElementById('logout-button');
+  const createTicketButton = document.getElementById('create-ticket-button');
+  const createTicketModal = document.getElementById('create-ticket-modal');
   const createTicketForm = document.getElementById('create-ticket-form');
   const myTicketsDiv = document.getElementById('my-tickets');
   const filterButtons = document.querySelectorAll('.filter-button');
+  const modalCloseButton = createTicketModal.querySelector('.close');
 
   let currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
   // Verificar si el usuario está autenticado y es encargado
   if (!currentUser || currentUser.role !== 'branch') {
-    alert('Acceso no autorizado');
+    Swal.fire({
+      icon: 'error',
+      title: 'Acceso no autorizado',
+      text: 'No tienes permiso para acceder a este panel.'
+    });
     window.location.href = 'index.html';
+    return;
   } else {
     loadMyTickets(); // Cargar todos los tickets inicialmente
   }
@@ -24,6 +45,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.location.href = 'index.html';
   });
 
+  // Abrir el modal para crear un ticket
+  createTicketButton.addEventListener('click', () => {
+    createTicketModal.style.display = 'block';
+  });
+
+  // Cerrar el modal al hacer clic en la 'x'
+  modalCloseButton.addEventListener('click', () => {
+    createTicketModal.style.display = 'none';
+  });
+
+  // Cerrar el modal al hacer clic fuera del contenido
+  window.addEventListener('click', (event) => {
+    if (event.target == createTicketModal) {
+      createTicketModal.style.display = 'none';
+    }
+  });
+
   // Crear nuevo ticket
   createTicketForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -32,7 +70,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const priority = document.getElementById('ticket-priority').value;
 
     if (!title || !description) {
-      alert('Por favor, complete todos los campos.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'Por favor, complete todos los campos.'
+      });
       return;
     }
 
@@ -57,13 +99,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         assignedTo: null
       });
 
-      alert('Ticket creado exitosamente con ID: ' + nextId);
+      Swal.fire({
+        icon: 'success',
+        title: 'Ticket Creado',
+        text: `Ticket #${nextId} creado exitosamente.`
+      });
+
       createTicketForm.reset();
+      createTicketModal.style.display = 'none';
       // Actualizar la lista de tickets
       loadMyTickets();
     } catch (error) {
       console.error('Error al crear ticket:', error);
-      alert('Error al crear ticket: ' + error.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Error al crear ticket: ${error.message}`
+      });
     }
   });
 
@@ -83,33 +135,73 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Cargar los tickets del encargado
   async function loadMyTickets(statusFilter = null) {
     myTicketsDiv.innerHTML = '';
+
     let q = query(collection(db, 'tickets'), where('emittedBy', '==', currentUser.username));
     if (statusFilter) {
       q = query(q, where('status', '==', statusFilter));
     }
+
     const ticketsSnapshot = await getDocs(q);
     if (ticketsSnapshot.empty) {
       myTicketsDiv.innerHTML = '<p>No tienes tickets registrados.</p>';
       return;
     }
+
+    // Crear la tabla
+    const table = document.createElement('table');
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>Número de Ticket</th>
+          <th>Fecha de Emisión</th>
+          <th>Título</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    `;
+    const tbody = table.querySelector('tbody');
+
     ticketsSnapshot.forEach((doc) => {
       const ticket = doc.data();
-      const ticketDiv = document.createElement('div');
-      ticketDiv.classList.add('ticket');
+      const tr = document.createElement('tr');
 
-      // Utilizar el formato de ticket proporcionado
-      ticketDiv.innerHTML = generateTicketHTML(ticket);
+      // Aplicar color según el estado
+      if (ticket.status.toLowerCase() === 'abierto') {
+        tr.classList.add('status-abierto');
+      } else if (ticket.status.toLowerCase() === 'en proceso') {
+        tr.classList.add('status-en-proceso');
+      } else if (ticket.status.toLowerCase() === 'terminado') {
+        tr.classList.add('status-terminado');
+      }
 
-      // Añadir evento para compartir como imagen
-      const shareButton = document.createElement('button');
-      shareButton.textContent = 'Compartir como Imagen';
-      shareButton.classList.add('share-button');
-      shareButton.addEventListener('click', () => {
-        shareTicketAsImage(ticketDiv);
+      // Formatear fecha y hora
+      const date = ticket.createdAt.toDate ? ticket.createdAt.toDate() : ticket.createdAt;
+      const formattedDate = new Date(date).toLocaleString('es-ES');
+
+      tr.innerHTML = `
+        <td>${ticket.id}</td>
+        <td>${formattedDate}</td>
+        <td>${ticket.title}</td>
+        <td>${ticket.status}</td>
+        <td>
+          <button class="show-ticket-button" data-id="${ticket.id}">Mostrar Ticket</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    myTicketsDiv.appendChild(table);
+
+    // Añadir eventos a los botones de mostrar ticket
+    const showTicketButtons = myTicketsDiv.querySelectorAll('.show-ticket-button');
+    showTicketButtons.forEach(button => {
+      button.addEventListener('click', async () => {
+        const ticketId = button.getAttribute('data-id');
+        await showTicket(ticketId);
       });
-      ticketDiv.appendChild(shareButton);
-
-      myTicketsDiv.appendChild(ticketDiv);
     });
   }
 
@@ -121,18 +213,180 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Función para compartir un ticket como imagen
-  function shareTicketAsImage(ticketElement) {
-    html2canvas(ticketElement).then(canvas => {
-      const imgData = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = imgData;
-      link.download = `Ticket_${ticketElement.querySelector('h2').textContent.replace('#', '')}.png`;
-      link.click();
-    }).catch(error => {
-      console.error('Error al compartir el ticket como imagen:', error);
-      alert('Error al compartir el ticket como imagen.');
-    });
+  // Función para mostrar el ticket en un modal con el formato original
+  async function showTicket(ticketId) {
+    try {
+      const ticketDoc = await getDoc(doc(db, 'tickets', ticketId));
+      if (ticketDoc.exists()) {
+        const ticketData = ticketDoc.data();
+        const ticketHTML = generateTicketHTML(ticketData);
+
+        Swal.fire({
+          title: `Ticket #${ticketData.id}`,
+          html: ticketHTML,
+          width: '600px',
+          showCloseButton: true,
+          showCancelButton: true,
+          showConfirmButton: true,
+          confirmButtonText: 'Descargar Ticket',
+          cancelButtonText: 'Compartir Ticket',
+          focusConfirm: false,
+          preConfirm: () => {
+            // No hacer nada aquí
+          }
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            // Descargar la imagen
+            await downloadTicketImage(ticketId);
+          } else if (result.dismiss === Swal.DismissReason.cancel) {
+            // Compartir la imagen
+            await shareTicketImage(ticketId);
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Ticket no encontrado.'
+        });
+      }
+    } catch (error) {
+      console.error('Error al mostrar el ticket:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Error al mostrar el ticket: ${error.message}`
+      });
+    }
+  }
+
+  // Función para descargar la imagen del ticket
+  async function downloadTicketImage(ticketId) {
+    try {
+      const ticketDoc = await getDoc(doc(db, 'tickets', ticketId));
+      if (ticketDoc.exists()) {
+        const ticketData = ticketDoc.data();
+        const ticketElement = document.createElement('div');
+        ticketElement.style.position = 'absolute';
+        ticketElement.style.top = '-9999px'; // Posicionar fuera de la vista
+        ticketElement.innerHTML = generateTicketHTML(ticketData);
+        document.body.appendChild(ticketElement);
+
+        // Esperar un breve momento para asegurar que el DOM esté actualizado
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Convertir el ticket a imagen
+        const canvas = await html2canvas(ticketElement, { useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+
+        // Verificar que imgData no esté vacío
+        if (!imgData || imgData.length === 0) {
+          throw new Error('No se pudo generar la imagen del ticket.');
+        }
+
+        // Descargar la imagen
+        const link = document.createElement('a');
+        link.href = imgData;
+        link.download = `Ticket_${ticketData.id}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Remover el elemento temporal
+        document.body.removeChild(ticketElement);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Descargado',
+          text: `La imagen del Ticket #${ticketData.id} ha sido descargada exitosamente.`
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Ticket no encontrado.'
+        });
+      }
+    } catch (error) {
+      console.error('Error al descargar el ticket:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Error al descargar el ticket: ${error.message}`
+      });
+    }
+  }
+
+  // Función para compartir la imagen del ticket usando la API Web Share
+  async function shareTicketImage(ticketId) {
+    if (!navigator.canShare || !navigator.canShare({ files: [] })) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Compartir no soportado',
+        text: 'Tu navegador no soporta la API de Web Share.'
+      });
+      return;
+    }
+
+    try {
+      const ticketDoc = await getDoc(doc(db, 'tickets', ticketId));
+      if (ticketDoc.exists()) {
+        const ticketData = ticketDoc.data();
+        const ticketElement = document.createElement('div');
+        ticketElement.style.position = 'absolute';
+        ticketElement.style.top = '-9999px'; // Posicionar fuera de la vista
+        ticketElement.innerHTML = generateTicketHTML(ticketData);
+        document.body.appendChild(ticketElement);
+
+        // Esperar un breve momento para asegurar que el DOM esté actualizado
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Convertir el ticket a imagen
+        const canvas = await html2canvas(ticketElement, { useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+
+        // Verificar que imgData no esté vacío
+        if (!imgData || imgData.length === 0) {
+          throw new Error('No se pudo generar la imagen del ticket.');
+        }
+
+        // Convertir la data URL a Blob
+        const res = await fetch(imgData);
+        const blob = await res.blob();
+        const file = new File([blob], `Ticket_${ticketData.id}.png`, { type: 'image/png' });
+
+        // Compartir usando la API Web Share
+        const shareData = {
+          files: [file],
+          title: `Ticket #${ticketData.id}`,
+          text: `Detalles del Ticket #${ticketData.id}`
+        };
+
+        await navigator.share(shareData);
+
+        // Remover el elemento temporal
+        document.body.removeChild(ticketElement);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Compartido',
+          text: `El Ticket #${ticketData.id} ha sido compartido exitosamente.`
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Ticket no encontrado.'
+        });
+      }
+    } catch (error) {
+      console.error('Error al compartir el ticket:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Error al compartir el ticket: ${error.message}`
+      });
+    }
   }
 
   // Función para generar el HTML del ticket con el formato proporcionado, incluyendo fecha y hora
@@ -140,25 +394,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const date = ticket.createdAt.toDate ? ticket.createdAt.toDate() : ticket.createdAt;
     const formattedDate = new Date(date).toLocaleString('es-ES');
     return `
-    <div class="ticket-format">
-      <header>
-        <p class="branch">Sucursal: ${ticket.sucursal}</p>
-        <h1 class="brand">${ticket.empresa}</h1>
-      </header>
-      <div class="content">
-        <h2>Ticket #${ticket.id}</h2>
-        <p><strong>Fecha de Emisión:</strong> ${formattedDate}</p>
-        <div class="title"><strong>Título:</strong> ${ticket.title}</div>
-        <div class="description">
-          <p><strong>Descripción:</strong></p>
-          <div class="description-box">${ticket.description}</div>
-        </div>
-        <div class="footer">
-          <p><strong>Prioridad:</strong> ${ticket.priority}</p>
-          <p><strong>Estado:</strong> ${ticket.status}</p>
+      <div class="ticket-format">
+        <header>
+          <p class="branch">Sucursal: ${ticket.sucursal}</p>
+          <h1 class="brand">${ticket.empresa}</h1>
+        </header>
+        <div class="content">
+          <h2>Ticket #${ticket.id}</h2>
+          <p><strong>Fecha de Emisión:</strong> ${formattedDate}</p>
+          <div class="title"><strong>Título:</strong> ${ticket.title}</div>
+          <div class="description">
+            <p><strong>Descripción:</strong></p>
+            <div class="description-box">${ticket.description}</div>
+          </div>
+          <div class="footer">
+            <p><strong>Prioridad:</strong> ${ticket.priority}</p>
+            <p><strong>Estado:</strong> ${ticket.status}</p>
+          </div>
         </div>
       </div>
-    </div>
     `;
   }
 });

@@ -5,27 +5,41 @@
   <meta charset="UTF-8">
   <title>Panel de Encargado</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- Incluir SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
   <h1>Panel de Encargado</h1>
   <button id="logout-button">Cerrar Sesión</button>
+  <button id="create-ticket-button">Crear Ticket</button>
 
-  <section id="ticket-creation" class="container">
-    <h2>Crear Ticket</h2>
-    <form id="create-ticket-form">
-      <label for="ticket-title">Título del Problema:</label>
-      <input type="text" id="ticket-title" placeholder="Título del problema" required>
-      <label for="ticket-description">Descripción:</label>
-      <textarea id="ticket-description" placeholder="Descripción del problema" required></textarea>
-      <label for="ticket-priority">Prioridad:</label>
-      <select id="ticket-priority">
-        <option value="alta">Alta</option>
-        <option value="media">Media</option>
-        <option value="baja">Baja</option>
-      </select>
-      <button type="submit">Enviar Ticket</button>
-    </form>
-  </section>
+  <!-- Modal para crear ticket -->
+  <div id="create-ticket-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Crear Nuevo Ticket</h2>
+      <form id="create-ticket-form">
+        <label for="ticket-title">Título del Problema:</label>
+        <input type="text" id="ticket-title" placeholder="Título del problema" required>
+        
+        <label for="ticket-description">Descripción:</label>
+        <textarea id="ticket-description" placeholder="Descripción del problema" required></textarea>
+        
+        <label for="ticket-priority">Prioridad:</label>
+        <select id="ticket-priority">
+          <option value="alta">Alta</option>
+          <option value="media">Media</option>
+          <option value="baja">Baja</option>
+        </select>
+        
+        <label for="ticket-image">Adjuntar Imagen (Opcional):</label>
+        <input type="file" id="ticket-image" accept="image/*" capture="environment">
+        
+        <button type="submit">Enviar Ticket</button>
+      </form>
+      <button id="take-photo-button">Tomar Foto</button>
+    </div>
+  </div>
 
   <section id="tickets-list" class="container">
     <h2>Mis Tickets</h2>
@@ -33,10 +47,10 @@
     <div id="ticket-filters">
       <button class="filter-button" data-status="abierto">Pendientes</button>
       <button class="filter-button" data-status="En Proceso">En Proceso</button>
-      <button class="filter-button" data-status="Terminado">Terminados</button>
+      <button class="filter-button" data-status="terminado">Terminados</button>
     </div>
     <div id="my-tickets">
-      <!-- Lista de tickets de la sucursal -->
+      <!-- Tabla de tickets -->
     </div>
   </section>
 

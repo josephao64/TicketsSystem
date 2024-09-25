@@ -18,9 +18,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const logoutButton = document.getElementById('logout-button');
   const createUserForm = document.getElementById('create-user-form');
   const usersList = document.getElementById('users-list');
-  const createTicketForm = document.getElementById('create-ticket-form');
-  const ticketsList = document.getElementById('tickets-list');
+  const openCreateTicketModalButton = document.getElementById('open-create-ticket-modal');
+  const createTicketModal = document.getElementById('create-ticket-modal');
+  const closeCreateTicketModalButton = document.getElementById('close-create-ticket-modal');
+  const modalCreateTicketForm = document.getElementById('modal-create-ticket-form');
   const filterButtons = document.querySelectorAll('.filter-button');
+  const ticketsTableBody = document.querySelector('#tickets-table tbody');
+  const exportTicketsButton = document.getElementById('export-tickets-button');
 
   let currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
@@ -84,12 +88,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Crear nuevo ticket
-  createTicketForm.addEventListener('submit', async (e) => {
+  // Abrir modal para crear ticket
+  openCreateTicketModalButton.addEventListener('click', () => {
+    createTicketModal.style.display = 'block';
+  });
+
+  // Cerrar modal para crear ticket
+  closeCreateTicketModalButton.addEventListener('click', () => {
+    createTicketModal.style.display = 'none';
+    modalCreateTicketForm.reset();
+  });
+
+  // Crear nuevo ticket desde modal
+  modalCreateTicketForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const title = document.getElementById('ticket-title').value.trim();
-    const description = document.getElementById('ticket-description').value.trim();
-    const priority = document.getElementById('ticket-priority').value;
+    const title = document.getElementById('modal-ticket-title').value.trim();
+    const description = document.getElementById('modal-ticket-description').value.trim();
+    const priority = document.getElementById('modal-ticket-priority').value;
 
     if (!title || !description) {
       alert('Por favor, complete todos los campos.');
@@ -118,7 +133,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       alert('Ticket creado exitosamente con ID: ' + nextId);
-      createTicketForm.reset();
+      modalCreateTicketForm.reset();
+      createTicketModal.style.display = 'none';
       // Actualizar la lista de tickets
       loadTickets();
     } catch (error) {
@@ -215,7 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Cargar la lista de tickets
   async function loadTickets(statusFilter = null) {
-    ticketsList.innerHTML = '';
+    ticketsTableBody.innerHTML = '';
     let q;
     if (statusFilter) {
       q = query(collection(db, 'tickets'), where('status', '==', statusFilter));
@@ -224,56 +240,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const ticketsSnapshot = await getDocs(q);
     if (ticketsSnapshot.empty) {
-      ticketsList.innerHTML = '<p>No hay tickets disponibles.</p>';
+      ticketsTableBody.innerHTML = '<tr><td colspan="5">No hay tickets disponibles.</td></tr>';
       return;
     }
     ticketsSnapshot.forEach((doc) => {
       const ticket = doc.data();
-      const ticketDiv = document.createElement('div');
-      ticketDiv.classList.add('ticket');
+      const row = document.createElement('tr');
 
-      // Utilizar el formato de ticket proporcionado
-      ticketDiv.innerHTML = generateTicketHTML(ticket);
+      // Formatear fecha de emisión
+      const date = ticket.createdAt.toDate ? ticket.createdAt.toDate() : ticket.createdAt;
+      const formattedDate = new Date(date).toLocaleString('es-ES');
 
-      // Añadir eventos
-      const buttonsDiv = document.createElement('div');
-      buttonsDiv.classList.add('ticket-buttons');
+      row.innerHTML = `
+        <td>${ticket.id}</td>
+        <td>${formattedDate}</td>
+        <td>${ticket.title}</td>
+        <td>${ticket.status}</td>
+        <td>
+          <button class="assign-button" data-id="${doc.id}">Asignar</button>
+          <button class="edit-ticket-button" data-id="${doc.id}">Editar</button>
+          <button class="delete-ticket-button" data-id="${doc.id}">Eliminar</button>
+          <button class="share-button" data-id="${doc.id}">Compartir</button>
+        </td>
+      `;
 
-      const assignButton = document.createElement('button');
-      assignButton.textContent = 'Asignar a Auxiliar';
-      assignButton.classList.add('assign-button');
-      assignButton.addEventListener('click', () => {
+      ticketsTableBody.appendChild(row);
+
+      // Añadir eventos a los botones
+      row.querySelector('.assign-button').addEventListener('click', () => {
         assignTicket(doc.id);
       });
-      buttonsDiv.appendChild(assignButton);
-
-      const editButton = document.createElement('button');
-      editButton.textContent = 'Editar';
-      editButton.classList.add('edit-ticket-button');
-      editButton.addEventListener('click', () => {
+      row.querySelector('.edit-ticket-button').addEventListener('click', () => {
         editTicket(doc.id, ticket);
       });
-      buttonsDiv.appendChild(editButton);
-
-      const deleteButton = document.createElement('button');
-      deleteButton.textContent = 'Eliminar';
-      deleteButton.classList.add('delete-ticket-button');
-      deleteButton.addEventListener('click', () => {
+      row.querySelector('.delete-ticket-button').addEventListener('click', () => {
         deleteTicket(doc.id);
       });
-      buttonsDiv.appendChild(deleteButton);
-
-      const shareButton = document.createElement('button');
-      shareButton.textContent = 'Compartir como Imagen';
-      shareButton.classList.add('share-button');
-      shareButton.addEventListener('click', () => {
-        shareTicketAsImage(ticketDiv);
+      row.querySelector('.share-button').addEventListener('click', () => {
+        shareTicketAsImage(doc.id);
       });
-      buttonsDiv.appendChild(shareButton);
-
-      ticketDiv.appendChild(buttonsDiv);
-
-      ticketsList.appendChild(ticketDiv);
     });
   }
 
@@ -366,11 +371,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     const newPriority = prompt('Editar Prioridad (alta/media/baja):', ticketData.priority);
     if (newPriority === null) return; // Cancelado
 
+    const newStatus = prompt('Editar Estado (abierto/En Proceso/Terminado):', ticketData.status);
+    if (newStatus === null) return; // Cancelado
+
+    // Validar estado
+    const validStatuses = ['abierto', 'En Proceso', 'Terminado'];
+    if (!validStatuses.includes(newStatus)) {
+      alert('Estado no válido. Debe ser "abierto", "En Proceso" o "Terminado".');
+      return;
+    }
+
     // Actualizar en Firestore
     updateDoc(doc(db, 'tickets', ticketId), {
       title: newTitle,
       description: newDescription,
-      priority: newPriority
+      priority: newPriority,
+      status: newStatus
     })
       .then(() => {
         alert('Ticket actualizado exitosamente');
@@ -398,17 +414,70 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Función para compartir un ticket como imagen
-  function shareTicketAsImage(ticketElement) {
-    html2canvas(ticketElement).then(canvas => {
+  async function shareTicketAsImage(ticketId) {
+    try {
+      // Obtener datos del ticket
+      const ticketDoc = await getDoc(doc(db, 'tickets', ticketId));
+      if (!ticketDoc.exists()) {
+        alert('Ticket no encontrado.');
+        return;
+      }
+      const ticket = ticketDoc.data();
+
+      // Crear un elemento temporal para renderizar el ticket
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = generateTicketHTML(ticket);
+      document.body.appendChild(tempDiv);
+
+      // Usar html2canvas para capturar el ticket
+      const canvas = await html2canvas(tempDiv);
       const imgData = canvas.toDataURL('image/png');
+
+      // Descargar la imagen
       const link = document.createElement('a');
       link.href = imgData;
-      link.download = `Ticket_${ticketElement.querySelector('h2').textContent.replace('#', '')}.png`;
+      link.download = `Ticket_${ticket.id}.png`;
       link.click();
-    }).catch(error => {
+
+      // Eliminar el elemento temporal
+      document.body.removeChild(tempDiv);
+    } catch (error) {
       console.error('Error al compartir el ticket como imagen:', error);
       alert('Error al compartir el ticket como imagen.');
-    });
+    }
+  }
+
+  // Función para exportar tickets (simulación con alert)
+  exportTicketsButton.addEventListener('click', () => {
+    alert('Opciones de Exportación:\n1. Exportar a PDF\n2. Exportar a Excel\n3. Exportar a CSV');
+    // Aquí puedes implementar la lógica real de exportación según las opciones
+  });
+
+  // Función para generar el HTML del ticket con el formato proporcionado, incluyendo fecha y hora
+  function generateTicketHTML(ticket) {
+    const date = ticket.createdAt.toDate ? ticket.createdAt.toDate() : ticket.createdAt;
+    const formattedDate = new Date(date).toLocaleString('es-ES');
+    return `
+    <div class="ticket-format">
+      <header>
+        <p class="branch">Sucursal: ${ticket.sucursal}</p>
+        <h1 class="brand">${ticket.empresa}</h1>
+      </header>
+      <div class="content">
+        <h2>Ticket #${ticket.id}</h2>
+        <p><strong>Fecha de Emisión:</strong> ${formattedDate}</p>
+        <div class="title"><strong>Título:</strong> ${ticket.title}</div>
+        <div class="description">
+          <p><strong>Descripción:</strong></p>
+          <div class="description-box">${ticket.description}</div>
+        </div>
+        <div class="footer">
+          <p><strong>Prioridad:</strong> ${ticket.priority}</p>
+          <p><strong>Estado:</strong> ${ticket.status}</p>
+        </div>
+      </div>
+    </div>
+    `;
   }
 });
 
@@ -420,31 +489,4 @@ async function hashPassword(password) {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   return hashHex;
-}
-
-// Función para generar el HTML del ticket con el formato proporcionado, incluyendo fecha y hora
-function generateTicketHTML(ticket) {
-  const date = ticket.createdAt.toDate ? ticket.createdAt.toDate() : ticket.createdAt;
-  const formattedDate = new Date(date).toLocaleString('es-ES');
-  return `
-  <div class="ticket-format">
-    <header>
-      <p class="branch">Sucursal: ${ticket.sucursal}</p>
-      <h1 class="brand">${ticket.empresa}</h1>
-    </header>
-    <div class="content">
-      <h2>Ticket #${ticket.id}</h2>
-      <p><strong>Fecha de Emisión:</strong> ${formattedDate}</p>
-      <div class="title"><strong>Título:</strong> ${ticket.title}</div>
-      <div class="description">
-        <p><strong>Descripción:</strong></p>
-        <div class="description-box">${ticket.description}</div>
-      </div>
-      <div class="footer">
-        <p><strong>Prioridad:</strong> ${ticket.priority}</p>
-        <p><strong>Estado:</strong> ${ticket.status}</p>
-      </div>
-    </div>
-  </div>
-  `;
 }

@@ -18,9 +18,22 @@
       <button class="filter-button-assigned" data-status="En Proceso">En Proceso</button>
       <button class="filter-button-assigned" data-status="Terminado">Terminados</button>
     </div>
-    <div id="assigned-tickets-list">
-      <!-- Lista de tickets asignados -->
-    </div>
+    <!-- Tabla de tickets asignados -->
+    <table id="assigned-tickets-table">
+      <thead>
+        <tr>
+          <th>Número de Ticket</th>
+          <th>Fecha de Emisión</th>
+          <th>Título</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Filas de tickets asignados serán cargadas dinámicamente -->
+      </tbody>
+    </table>
+    <button id="export-assigned-tickets-button">Exportar</button>
   </section>
 
   <section id="all-tickets" class="container">
@@ -31,9 +44,22 @@
       <button class="filter-button-all" data-status="En Proceso">En Proceso</button>
       <button class="filter-button-all" data-status="Terminado">Terminados</button>
     </div>
-    <div id="all-tickets-list">
-      <!-- Lista de todos los tickets -->
-    </div>
+    <!-- Tabla de todos los tickets -->
+    <table id="all-tickets-table">
+      <thead>
+        <tr>
+          <th>Número de Ticket</th>
+          <th>Fecha de Emisión</th>
+          <th>Título</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Filas de todos los tickets serán cargadas dinámicamente -->
+      </tbody>
+    </table>
+    <button id="export-all-tickets-button">Exportar</button>
   </section>
 
   <!-- Librería para convertir HTML a Canvas -->

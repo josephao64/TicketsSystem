@@ -37,20 +37,29 @@
 
   <section id="ticket-management" class="container">
     <h2>Gestión de Tickets</h2>
-    <!-- Formulario para crear tickets -->
-    <form id="create-ticket-form">
-      <label for="ticket-title">Título del Ticket:</label>
-      <input type="text" id="ticket-title" placeholder="Título del Ticket" required>
-      <label for="ticket-description">Descripción:</label>
-      <textarea id="ticket-description" placeholder="Descripción del Ticket" required></textarea>
-      <label for="ticket-priority">Prioridad:</label>
-      <select id="ticket-priority">
-        <option value="alta">Alta</option>
-        <option value="media">Media</option>
-        <option value="baja">Baja</option>
-      </select>
-      <button type="submit">Crear Ticket</button>
-    </form>
+    <!-- Botón para crear ticket -->
+    <button id="open-create-ticket-modal">Crear Ticket</button>
+
+    <!-- Modal para crear ticket -->
+    <div id="create-ticket-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <h3>Crear Nuevo Ticket</h3>
+        <form id="modal-create-ticket-form">
+          <label for="modal-ticket-title">Título del Ticket:</label>
+          <input type="text" id="modal-ticket-title" placeholder="Título del Ticket" required>
+          <label for="modal-ticket-description">Descripción:</label>
+          <textarea id="modal-ticket-description" placeholder="Descripción del Ticket" required></textarea>
+          <label for="modal-ticket-priority">Prioridad:</label>
+          <select id="modal-ticket-priority">
+            <option value="alta">Alta</option>
+            <option value="media">Media</option>
+            <option value="baja">Baja</option>
+          </select>
+          <button type="submit">Enviar Ticket</button>
+          <button type="button" id="close-create-ticket-modal">Cancelar</button>
+        </form>
+      </div>
+    </div>
 
     <!-- Botones para filtrar tickets -->
     <div id="ticket-filters">
@@ -59,9 +68,22 @@
       <button class="filter-button" data-status="Terminado">Terminados</button>
     </div>
 
-    <div id="tickets-list">
-      <!-- Lista de tickets con opciones de edición, eliminación y asignación -->
-    </div>
+    <!-- Tabla de tickets -->
+    <table id="tickets-table">
+      <thead>
+        <tr>
+          <th>Número de Ticket</th>
+          <th>Fecha de Emisión</th>
+          <th>Título</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Filas de tickets serán cargadas dinámicamente -->
+      </tbody>
+    </table>
+    <button id="export-tickets-button">Exportar</button>
   </section>
 
   <!-- Librería para convertir HTML a Canvas -->
