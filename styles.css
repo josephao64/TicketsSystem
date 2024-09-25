@@ -99,13 +99,13 @@ label {
 
 /* Estilos para el panel de administración, encargado y auxiliar */
 #logout-button {
-  position: fixed;
+  position: absolute;
   top: 20px;
   right: 20px;
 }
 
 #create-ticket-button {
-  position: fixed;
+  position: absolute;
   top: 20px;
   left: 20px;
 }
@@ -142,8 +142,7 @@ section h2 {
 /* Estilos para el formato de ticket proporcionado */
 .ticket-format {
   background-color: white;
-  width: 90%;
-  max-width: 450px;
+  width: 450px;
   border: 1px solid #ccc;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   padding: 20px;
@@ -152,7 +151,7 @@ section h2 {
 
 .ticket-format header {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
 }
 
@@ -183,13 +182,8 @@ section h2 {
 
 .ticket-format .footer {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: space-between;
   margin-top: 20px;
-}
-
-.ticket-format .footer p {
-  margin: 5px 0;
 }
 
 .ticket-format .ticket-image {
@@ -250,10 +244,10 @@ section h2 {
 
 .modal-content {
   background-color: #fefefe;
-  margin: 5% auto; /* Centrado verticalmente */
+  margin: 10% auto; /* Centrado verticalmente */
   padding: 20px;
   border: 1px solid #888;
-  width: 90%; /* Ancho */
+  width: 80%; /* Ancho */
   max-width: 500px;
   border-radius: 8px;
 }
@@ -273,70 +267,27 @@ section h2 {
 }
 
 /* Estilos para dispositivos móviles */
-@media (max-width: 768px) {
-  #logout-button,
-  #create-ticket-button {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    width: auto;
-    margin: 5px;
-  }
-
-  .ticket-format {
+@media (max-width: 600px) {
+  .container, #login-container {
     width: 95%;
   }
 
-  .ticket-format header {
-    flex-direction: column;
+  #logout-button,
+  #create-ticket-button {
+    position: static;
+    display: block;
+    margin: 10px auto;
   }
 
-  .ticket-format .footer {
-    flex-direction: column;
-  }
-
-  .ticket-format .footer p {
-    text-align: center;
-  }
-
-  table, th, td {
+  table {
+    width: 100%;
     font-size: 14px;
-  }
-}
-
-/* Estilos para pantallas pequeñas */
-@media (max-width: 480px) {
-  button {
-    font-size: 14px;
-    padding: 8px 12px;
-  }
-
-  .ticket-format {
-    padding: 15px;
   }
 
   .modal-content {
     width: 95%;
-    margin: 10% auto;
+    margin: 5% auto;
   }
-
-  .image-preview img {
-    max-height: 150px;
-  }
-}
-
-/* Estilos para la vista previa de la imagen */
-.image-preview {
-  margin-top: 10px;
-  text-align: center;
-}
-
-.image-preview img {
-  max-width: 100%;
-  max-height: 200px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
 }
 
 /* Estilos para la tabla */
@@ -378,4 +329,17 @@ tr:hover {
 
 .status-terminado {
   background-color: #d4edda !important; /* Verde claro */
+}
+
+/* Estilos para la vista previa de la imagen */
+.image-preview {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
