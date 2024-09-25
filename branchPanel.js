@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const modalCloseButton = createTicketModal.querySelector('.close');
   const takePhotoButton = document.getElementById('take-photo-button');
   const ticketImageInput = document.getElementById('ticket-image');
-  const imagePreviewDiv = document.getElementById('image-preview'); // Añadir en HTML si usas vista previa
+  const imagePreviewDiv = document.getElementById('image-preview'); // Vista previa de imagen
 
   let currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
@@ -336,7 +336,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         Swal.fire({
           title: `Ticket #${ticketData.id}`,
           html: ticketHTML,
-          width: '600px',
+          width: '90%',
+          maxWidth: '600px',
           showCloseButton: true,
           showCancelButton: true,
           focusConfirm: false,

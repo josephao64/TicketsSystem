@@ -19,22 +19,24 @@ h1 {
 
 .container {
   width: 90%;
-  max-width: 1000px;
+  max-width: 1200px; /* Aumentar el ancho máximo para pantallas grandes */
   margin: 20px auto;
   background-color: #fff;
   padding: 20px;
   box-shadow: 0 0 10px #ccc;
+  border-radius: 8px; /* Bordes redondeados */
 }
 
 button {
   background-color: #007bff;
   color: #fff;
   border: none;
-  padding: 10px 15px;
+  padding: 12px 20px; /* Mayor tamaño para mejor accesibilidad en móviles */
   margin: 5px 0;
   cursor: pointer;
   font-size: 16px;
   border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
 button:hover {
@@ -54,7 +56,7 @@ input[type="password"],
 select,
 textarea {
   width: 100%;
-  padding: 8px;
+  padding: 10px;
   margin: 5px 0 15px 0;
   border: 1px solid #ccc;
   font-size: 16px;
@@ -83,9 +85,14 @@ label {
 
 /* Estilos para el formulario de inicio de sesión */
 #login-container {
-  width: 300px;
+  width: 90%;
+  max-width: 400px;
   margin: 50px auto;
   text-align: center;
+  background-color: #fff;
+  padding: 20px;
+  box-shadow: 0 0 10px #ccc;
+  border-radius: 8px;
 }
 
 #login-container select,
@@ -99,19 +106,21 @@ label {
 
 /* Estilos para el panel de administración, encargado y auxiliar */
 #logout-button {
-  position: absolute;
+  position: fixed; /* Fijo para que siempre esté visible */
   top: 20px;
   right: 20px;
+  z-index: 1000; /* Por encima de otros elementos */
 }
 
 #create-ticket-button {
-  position: absolute;
+  position: fixed; /* Fijo para que siempre esté visible */
   top: 20px;
   left: 20px;
+  z-index: 1000; /* Por encima de otros elementos */
 }
 
 section {
-  margin: 20px 0;
+  margin: 80px 0 20px 0; /* Ajustar margen superior para espacio de botones fijos */
 }
 
 section h2 {
@@ -142,17 +151,20 @@ section h2 {
 /* Estilos para el formato de ticket proporcionado */
 .ticket-format {
   background-color: white;
-  width: 450px;
+  width: 90%;
+  max-width: 500px; /* Ajustar para pantallas pequeñas */
   border: 1px solid #ccc;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   padding: 20px;
   margin: 20px auto;
+  border-radius: 8px;
 }
 
 .ticket-format header {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column; /* Apilar elementos en móviles */
   align-items: center;
+  text-align: center;
 }
 
 .ticket-format header .branch {
@@ -170,6 +182,7 @@ section h2 {
 .ticket-format .content h2 {
   border-bottom: 1px solid black;
   padding-bottom: 10px;
+  text-align: center;
 }
 
 .ticket-format .description-box {
@@ -182,12 +195,18 @@ section h2 {
 
 .ticket-format .footer {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column; /* Apilar en móviles */
+  gap: 10px;
   margin-top: 20px;
+}
+
+.ticket-format .footer p {
+  margin: 0;
 }
 
 .ticket-format .ticket-image {
   margin-top: 15px;
+  text-align: center;
 }
 
 .ticket-format .ticket-image img {
@@ -208,16 +227,32 @@ section h2 {
   background-color: #17a2b8;
 }
 
+.assign-button:hover {
+  background-color: #117a8b;
+}
+
 .edit-ticket-button {
   background-color: #ffc107;
+}
+
+.edit-ticket-button:hover {
+  background-color: #e0a800;
 }
 
 .delete-ticket-button {
   background-color: #dc3545;
 }
 
+.delete-ticket-button:hover {
+  background-color: #c82333;
+}
+
 .share-button {
   background-color: #28a745;
+}
+
+.share-button:hover {
+  background-color: #218838;
 }
 
 .show-ticket-button {
@@ -233,7 +268,7 @@ section h2 {
 .modal {
   display: none; /* Oculto por defecto */
   position: fixed; /* Fijo */
-  z-index: 1; /* Por encima de otros elementos */
+  z-index: 1001; /* Por encima de otros elementos */
   left: 0;
   top: 0;
   width: 100%; /* Ancho completo */
@@ -244,14 +279,15 @@ section h2 {
 
 .modal-content {
   background-color: #fefefe;
-  margin: 10% auto; /* Centrado verticalmente */
+  margin: 5% auto; /* Centrado verticalmente */
   padding: 20px;
   border: 1px solid #888;
-  width: 80%; /* Ancho */
+  width: 90%; /* Ancho en móviles */
   max-width: 500px;
   border-radius: 8px;
 }
 
+/* Close button */
 .close {
   color: #aaa;
   float: right;
@@ -267,68 +303,51 @@ section h2 {
 }
 
 /* Estilos para dispositivos móviles */
-@media (max-width: 600px) {
-  .container, #login-container {
+@media (max-width: 768px) {
+  .ticket-format {
     width: 95%;
+  }
+
+  .ticket-format header {
+    flex-direction: column;
+  }
+
+  .ticket-format .footer {
+    flex-direction: column;
   }
 
   #logout-button,
   #create-ticket-button {
-    position: static;
-    display: block;
-    margin: 10px auto;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    width: calc(100% - 20px);
   }
 
-  table {
-    width: 100%;
+  #create-ticket-button {
+    top: 60px;
+  }
+}
+
+/* Estilos para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  button {
+    padding: 10px 15px;
     font-size: 14px;
   }
 
-  .modal-content {
-    width: 95%;
-    margin: 5% auto;
+  .ticket-format {
+    padding: 15px;
   }
-}
 
-/* Estilos para la tabla */
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+  .ticket-format header .branch {
+    font-size: 1.2em;
+  }
 
-table, th, td {
-  border: 1px solid #ddd;
-}
-
-th, td {
-  padding: 12px;
-  text-align: left;
-}
-
-th {
-  background-color: #007bff;
-  color: white;
-}
-
-tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-
-tr:hover {
-  background-color: #ddd;
-}
-
-/* Colores según el estado del ticket */
-.status-abierto {
-  background-color: #f8d7da !important; /* Rojo claro */
-}
-
-.status-en-proceso {
-  background-color: #fff3cd !important; /* Amarillo claro */
-}
-
-.status-terminado {
-  background-color: #d4edda !important; /* Verde claro */
+  .ticket-format .footer p {
+    font-size: 14px;
+  }
 }
 
 /* Estilos para la vista previa de la imagen */

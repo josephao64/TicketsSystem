@@ -3,6 +3,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Meta etiqueta añadida -->
   <title>Panel de Encargado</title>
   <link rel="stylesheet" href="styles.css">
   <!-- Incluir SweetAlert2 -->
@@ -34,6 +35,8 @@
         
         <label for="ticket-image">Adjuntar Imagen (Opcional):</label>
         <input type="file" id="ticket-image" accept="image/*" capture="environment">
+        
+        <div id="image-preview" class="image-preview"></div> <!-- Vista previa de imagen -->
         
         <button type="submit">Enviar Ticket</button>
       </form>
