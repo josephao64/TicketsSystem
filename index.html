@@ -1,0 +1,25 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Sistema de Tickets</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Sistema de Tickets</h1>
+  <div id="login-container">
+    <h2>Inicio de Sesión</h2>
+    <label for="user-select">Usuario:</label>
+    <select id="user-select">
+      <!-- Opciones de usuarios serán cargadas dinámicamente -->
+    </select>
+    <label for="password-input">Contraseña:</label>
+    <input type="password" id="password-input" placeholder="Contraseña">
+    <button id="login-button">Ingresar</button>
+    <p id="login-error" class="error"></p>
+  </div>
+
+  <script type="module" src="auth.js"></script>
+</body>
+</html>

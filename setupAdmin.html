@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Configuración de Usuario Administrador</title>
+</head>
+<body>
+  <h1>Configuración de Usuario Administrador</h1>
+  <p>Haz clic en el botón para crear el usuario administrador predefinido.</p>
+  <button id="create-admin-button">Crear Usuario Administrador</button>
+  <p id="message"></p>
+
+  <!-- Incluye los scripts de Firebase -->
+  <script type="module">
+    // Importa los módulos necesarios de Firebase
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+    import { getFirestore, doc, setDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
+    // Tu configuración de Firebase (reemplaza con tus propios datos)
+    const firebaseConfig = {
+  apiKey: "AIzaSyA36FovrfzpJOtQsQSkoauV4GGA6n5yD3M",
+  authDomain: "dbticketsystem.firebaseapp.com",
+  projectId: "dbticketsystem",
+  storageBucket: "dbticketsystem.appspot.com",
+  messagingSenderId: "1072328647719",
+  appId: "1:1072328647719:web:4bbbb98df269ba51fa1a02"
+};
+ 
+
+    // Inicializa Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Función para hashear la contraseña
+    async function hashPassword(password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return hashHex;
+    }
+
+    // Manejar el clic en el botón
+    document.getElementById('create-admin-button').addEventListener('click', async () => {
+      const messageEl = document.getElementById('message');
+
+      // Datos del usuario administrador predefinido
+      const username = "administrador";
+      const password = "123"; // Cambia esta contraseña por una segura
+      const role = "admin";
+
+      try {
+        // Hashear la contraseña
+        const passwordHash = await hashPassword(password);
+
+        // Generar un ID único para el usuario
+        const adminId = "adminUserId"; // Puedes usar un ID fijo o generar uno nuevo
+
+        // Guardar información pública en users_public
+        await setDoc(doc(db, 'users_public', adminId), {
+          username,
+          role
+        });
+
+        // Guardar información privada en users_private
+        await setDoc(doc(db, 'users_private', adminId), {
+          passwordHash
+        });
+
+        messageEl.textContent = 'Usuario administrador creado exitosamente.';
+      } catch (error) {
+        console.error('Error al crear el usuario administrador:', error);
+        messageEl.textContent = 'Error al crear el usuario administrador.';
+      }
+    });
+  </script>
+</body>
+</html>

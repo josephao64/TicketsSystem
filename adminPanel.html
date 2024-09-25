@@ -1,0 +1,72 @@
+<!-- adminPanel.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel de Administración</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Panel de Administración</h1>
+  <button id="logout-button">Cerrar Sesión</button>
+
+  <section id="user-management" class="container">
+    <h2>Gestión de Usuarios</h2>
+    <!-- Formulario para crear usuarios -->
+    <form id="create-user-form">
+      <label for="new-username">Nombre de Usuario:</label>
+      <input type="text" id="new-username" placeholder="Nombre de Usuario" required>
+      <label for="new-password">Contraseña:</label>
+      <input type="password" id="new-password" placeholder="Contraseña" required>
+      <label for="new-role">Rol:</label>
+      <select id="new-role">
+        <option value="branch">Encargado</option>
+        <option value="admin">Administrador</option>
+        <option value="auxiliar">Auxiliar</option>
+      </select>
+      <label for="new-empresa">Empresa:</label>
+      <input type="text" id="new-empresa" placeholder="Empresa" required>
+      <label for="new-sucursal">Sucursal:</label>
+      <input type="text" id="new-sucursal" placeholder="Sucursal" required>
+      <button type="submit">Crear Usuario</button>
+    </form>
+    <div id="users-list">
+      <!-- Lista de usuarios con opciones de edición y eliminación -->
+    </div>
+  </section>
+
+  <section id="ticket-management" class="container">
+    <h2>Gestión de Tickets</h2>
+    <!-- Formulario para crear tickets -->
+    <form id="create-ticket-form">
+      <label for="ticket-title">Título del Ticket:</label>
+      <input type="text" id="ticket-title" placeholder="Título del Ticket" required>
+      <label for="ticket-description">Descripción:</label>
+      <textarea id="ticket-description" placeholder="Descripción del Ticket" required></textarea>
+      <label for="ticket-priority">Prioridad:</label>
+      <select id="ticket-priority">
+        <option value="alta">Alta</option>
+        <option value="media">Media</option>
+        <option value="baja">Baja</option>
+      </select>
+      <button type="submit">Crear Ticket</button>
+    </form>
+
+    <!-- Botones para filtrar tickets -->
+    <div id="ticket-filters">
+      <button class="filter-button" data-status="abierto">Pendientes</button>
+      <button class="filter-button" data-status="En Proceso">En Proceso</button>
+      <button class="filter-button" data-status="Terminado">Terminados</button>
+    </div>
+
+    <div id="tickets-list">
+      <!-- Lista de tickets con opciones de edición, eliminación y asignación -->
+    </div>
+  </section>
+
+  <!-- Librería para convertir HTML a Canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script type="module" src="adminPanel.js"></script>
+</body>
+</html>

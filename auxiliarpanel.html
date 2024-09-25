@@ -1,0 +1,44 @@
+<!-- auxiliarPanel.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel de Auxiliar</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Panel de Auxiliar</h1>
+  <button id="logout-button">Cerrar Sesión</button>
+
+  <section id="assigned-tickets" class="container">
+    <h2>Tickets Asignados</h2>
+    <!-- Botones para filtrar tickets -->
+    <div id="ticket-filters-assigned">
+      <button class="filter-button-assigned" data-status="abierto">Pendientes</button>
+      <button class="filter-button-assigned" data-status="En Proceso">En Proceso</button>
+      <button class="filter-button-assigned" data-status="Terminado">Terminados</button>
+    </div>
+    <div id="assigned-tickets-list">
+      <!-- Lista de tickets asignados -->
+    </div>
+  </section>
+
+  <section id="all-tickets" class="container">
+    <h2>Todos los Tickets</h2>
+    <!-- Botones para filtrar tickets -->
+    <div id="ticket-filters-all">
+      <button class="filter-button-all" data-status="abierto">Pendientes</button>
+      <button class="filter-button-all" data-status="En Proceso">En Proceso</button>
+      <button class="filter-button-all" data-status="Terminado">Terminados</button>
+    </div>
+    <div id="all-tickets-list">
+      <!-- Lista de todos los tickets -->
+    </div>
+  </section>
+
+  <!-- Librería para convertir HTML a Canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script type="module" src="auxiliarPanel.js"></script>
+</body>
+</html>
