@@ -1,5 +1,4 @@
 // branchPanel.js
-
 import { db, storage } from './firebaseConfig.js';
 import { 
   collection, 
@@ -11,9 +10,7 @@ import {
   orderBy, 
   limit, 
   Timestamp, 
-  getDoc,
-  updateDoc,
-  deleteDoc 
+  getDoc
 } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js';
 
@@ -27,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const modalCloseButton = createTicketModal.querySelector('.close');
   const takePhotoButton = document.getElementById('take-photo-button');
   const ticketImageInput = document.getElementById('ticket-image');
-  const imagePreviewDiv = document.getElementById('image-preview'); // Añadir en HTML si usas vista previa
+  const imagePreviewDiv = document.getElementById('image-preview');
 
   let currentUser = JSON.parse(localStorage.getItem('currentUser'));
 
@@ -72,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     ticketImageInput.click();
   });
 
-  // Mostrar vista previa de la imagen seleccionada
+  // Vista previa de la imagen seleccionada
   ticketImageInput.addEventListener('change', () => {
     const file = ticketImageInput.files[0];
     if (file && file.type.startsWith('image/')) {
@@ -89,12 +86,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Crear nuevo ticket
   createTicketForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const title = document.getElementById('ticket-title').value.trim();
-    const description = document.getElementById('ticket-description').value.trim();
-    const priority = document.getElementById('ticket-priority').value;
-    const imageFile = ticketImageInput.files[0];
-
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    let title = document.getElementById('ticket-title').value.trim();
+    let description = document.getElementById('ticket-description').value.trim();
+    let priority = document.getElementById('ticket-priority').value;
+    let imageFile = ticketImageInput.files[0];
 
     if (!title || !description) {
       Swal.fire({
@@ -105,24 +100,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    // Validar tamaño de la imagen
-    if (imageFile && imageFile.size > MAX_FILE_SIZE) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Imagen Demasiado Grande',
-        text: 'La imagen seleccionada excede el tamaño máximo permitido de 5MB.'
-      });
-      return;
-    }
+    // Limitar el tamaño máximo del archivo a 1MB
+    const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
 
-    // Validar tipo de archivo
-    if (imageFile && !imageFile.type.startsWith('image/')) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Tipo de Archivo No Válido',
-        text: 'Por favor, sube solo archivos de imagen.'
-      });
-      return;
+    if (imageFile && imageFile.size > MAX_FILE_SIZE) {
+      // Intentar comprimir la imagen
+      try {
+        const compressedFile = await compressImage(imageFile, MAX_FILE_SIZE);
+        if (compressedFile.size > MAX_FILE_SIZE) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Imagen Demasiado Grande',
+            text: 'La imagen seleccionada no pudo ser comprimida lo suficiente. Por favor, selecciona una imagen más pequeña.'
+          });
+          return;
+        }
+        imageFile = compressedFile;
+      } catch (error) {
+        console.error('Error al comprimir la imagen:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Ocurrió un error al comprimir la imagen. Por favor, intenta nuevamente.'
+        });
+        return;
+      }
     }
 
     try {
@@ -140,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let imageUrl = null;
       if (imageFile) {
-        // Comprimir y redimensionar la imagen
+        // Comprimir y redimensionar la imagen utilizando browser-image-compression
         imageUrl = await processAndUploadImage(imageFile, nextId);
       }
 
@@ -186,7 +188,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Función para obtener el siguiente ID de ticket
   async function getNextTicketId() {
     const ticketsRef = collection(db, 'tickets');
-    const q = query(ticketsRef, orderBy('id', 'desc'), limit(1));
+    // Ordenar por 'createdAt' descendente para obtener el más reciente
+    const q = query(ticketsRef, orderBy('createdAt', 'desc'), limit(1));
     const querySnapshot = await getDocs(q);
     if (querySnapshot.empty) {
       return 1;
@@ -196,61 +199,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Función para comprimir y redimensionar la imagen
+  // Función para comprimir la imagen utilizando browser-image-compression
+  async function compressImage(file, maxSize) {
+    const options = {
+      maxSizeMB: maxSize / (1024 * 1024), // Convertir bytes a MB
+      maxWidthOrHeight: 1280, // Dimensión máxima
+      useWebWorker: true,
+      initialQuality: 0.8, // Calidad inicial (80%)
+    };
+    try {
+      const compressedFile = await imageCompression(file, options);
+      return compressedFile;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Función para comprimir y subir la imagen
   async function processAndUploadImage(file, ticketId) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const reader = new FileReader();
+    try {
+      // Comprimir la imagen
+      const compressedFile = await compressImage(file, 1); // 1MB
 
-      reader.onload = (e) => {
-        img.src = e.target.result;
-      };
+      // Crear una referencia en Firebase Storage
+      const imageRef = ref(storage, `tickets/${currentUser.username}/${ticketId}_${compressedFile.name}`);
 
-      img.onload = async () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800; // Ancho máximo
-        const scaleSize = MAX_WIDTH / img.width;
-        canvas.width = MAX_WIDTH;
-        canvas.height = img.height * scaleSize;
+      // Subir la imagen
+      await uploadBytes(imageRef, compressedFile, { contentType: compressedFile.type });
 
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        // Convertir el canvas a Blob con calidad ajustada
-        canvas.toBlob(async (blob) => {
-          try {
-            // Crear una referencia en Firebase Storage
-            const imageRef = ref(storage, `tickets/${currentUser.username}/${ticketId}_${file.name}`);
-
-            // Subir la imagen
-            await uploadBytes(imageRef, blob, { contentType: file.type });
-
-            // Obtener la URL de descarga
-            const downloadURL = await getDownloadURL(imageRef);
-            resolve(downloadURL);
-          } catch (uploadError) {
-            console.error('Error al subir la imagen:', uploadError);
-            reject(uploadError);
-          }
-        }, 'image/jpeg', 0.7); // Ajusta la calidad aquí (0.7 = 70%)
-      };
-
-      img.onerror = (error) => {
-        console.error('Error al cargar la imagen:', error);
-        reject(error);
-      };
-
-      reader.readAsDataURL(file);
-    });
+      // Obtener la URL de descarga
+      const downloadURL = await getDownloadURL(imageRef);
+      return downloadURL;
+    } catch (uploadError) {
+      console.error('Error al subir la imagen:', uploadError);
+      throw uploadError;
+    }
   }
 
   // Cargar los tickets del encargado
   async function loadMyTickets(statusFilter = null) {
     myTicketsDiv.innerHTML = '';
 
-    let q = query(collection(db, 'tickets'), where('emittedBy', '==', currentUser.username));
-    if (statusFilter) {
-      q = query(q, where('status', '==', statusFilter));
+    let q;
+    const ticketsRef = collection(db, 'tickets');
+
+    if (statusFilter && statusFilter.toLowerCase() !== 'todos') {
+      // Filtrar por estado y ordenar por 'createdAt' descendente
+      q = query(
+        ticketsRef,
+        where('emittedBy', '==', currentUser.username),
+        where('status', '==', statusFilter.toLowerCase()),
+        orderBy('createdAt', 'desc')
+      );
+    } else {
+      // Ver todos los tickets del usuario y ordenar por 'createdAt' descendente
+      q = query(
+        ticketsRef,
+        where('emittedBy', '==', currentUser.username),
+        orderBy('createdAt', 'desc')
+      );
     }
 
     const ticketsSnapshot = await getDocs(q);
@@ -297,7 +304,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <td>${ticket.id}</td>
         <td>${formattedDate}</td>
         <td>${ticket.title}</td>
-        <td>${ticket.status}</td>
+        <td>${capitalizeFirstLetter(ticket.status)}</td>
         <td>
           <button class="show-ticket-button" data-id="${ticket.id}">Mostrar Ticket</button>
         </td>
@@ -315,6 +322,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         await showTicket(ticketId);
       });
     });
+  }
+
+  // Función para capitalizar la primera letra del estado
+  function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
   }
 
   // Manejar los botones de filtro
@@ -526,8 +538,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="description-box">${ticket.description}</div>
         </div>
         <div class="footer">
-          <p><strong>Prioridad:</strong> ${ticket.priority}</p>
-          <p><strong>Estado:</strong> ${ticket.status}</p>
+          <p><strong>Prioridad:</strong> ${capitalizeFirstLetter(ticket.priority)}</p>
+          <p><strong>Estado:</strong> ${capitalizeFirstLetter(ticket.status)}</p>
         </div>
         ${ticket.imageUrl ? `<div class="ticket-image"><img src="${ticket.imageUrl}" alt="Imagen del Ticket"></div>` : ''}
       </div>

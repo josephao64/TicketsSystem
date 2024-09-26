@@ -35,6 +35,7 @@ button {
   cursor: pointer;
   font-size: 16px;
   border-radius: 4px;
+  transition: background-color 0.3s;
 }
 
 button:hover {
@@ -117,6 +118,21 @@ section {
 section h2 {
   margin-bottom: 10px;
   color: #007bff;
+}
+
+/* Botones para filtrar tickets */
+#ticket-filters {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#ticket-filters .filter-button {
+  background-color: #28a745; /* Verde para "Ver Todos" */
+  margin: 0 5px;
+}
+
+#ticket-filters .filter-button:hover {
+  background-color: #218838;
 }
 
 /* Estilos para la gestión de usuarios y tickets */
@@ -208,16 +224,32 @@ section h2 {
   background-color: #17a2b8;
 }
 
+.assign-button:hover {
+  background-color: #138496;
+}
+
 .edit-ticket-button {
   background-color: #ffc107;
+}
+
+.edit-ticket-button:hover {
+  background-color: #e0a800;
 }
 
 .delete-ticket-button {
   background-color: #dc3545;
 }
 
+.delete-ticket-button:hover {
+  background-color: #c82333;
+}
+
 .share-button {
   background-color: #28a745;
+}
+
+.share-button:hover {
+  background-color: #218838;
 }
 
 .show-ticket-button {
@@ -233,13 +265,13 @@ section h2 {
 .modal {
   display: none; /* Oculto por defecto */
   position: fixed; /* Fijo */
-  z-index: 1; /* Por encima de otros elementos */
+  z-index: 1000; /* Por encima de otros elementos */
   left: 0;
   top: 0;
   width: 100%; /* Ancho completo */
   height: 100%; /* Alto completo */
   overflow: auto; /* Scroll si es necesario */
-  background-color: rgba(0,0,0,0.5); /* Fondo semitransparente */
+  background-color: rgba(0,0,0,0.4); /* Fondo semitransparente */
 }
 
 .modal-content {
@@ -248,22 +280,260 @@ section h2 {
   padding: 20px;
   border: 1px solid #888;
   width: 80%; /* Ancho */
-  max-width: 500px;
+  max-width: 600px;
+  position: relative;
   border-radius: 8px;
 }
 
-.close {
+.close-modal {
+  position: absolute;
+  top: 10px;
+  right: 15px;
   color: #aaa;
-  float: right;
   font-size: 28px;
   font-weight: bold;
   cursor: pointer;
 }
 
-.close:hover,
-.close:focus {
+.close-modal:hover,
+.close-modal:focus {
   color: black;
   text-decoration: none;
+}
+
+/* Estilos para la vista previa de la imagen */
+.image-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Estilos para la tabla de tickets */
+#tickets-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+#tickets-table th, #tickets-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+#tickets-table th {
+  background-color: #007bff;
+  color: white;
+}
+
+#tickets-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+#tickets-table tr:hover {
+  background-color: #ddd;
+}
+
+/* Colores según el estado del ticket */
+.status-abierto {
+  background-color: #f8d7da !important; /* Rojo claro */
+}
+
+.status-en-proceso {
+  background-color: #fff3cd !important; /* Amarillo claro */
+}
+
+.status-terminado {
+  background-color: #d4edda !important; /* Verde claro */
+}
+
+/* Estilos para botones dentro de la tabla */
+#tickets-table button {
+  margin-right: 5px;
+  padding: 5px 10px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.assign-button {
+  background-color: #17a2b8;
+}
+
+.assign-button:hover {
+  background-color: #138496;
+}
+
+.edit-ticket-button {
+  background-color: #ffc107;
+}
+
+.edit-ticket-button:hover {
+  background-color: #e0a800;
+}
+
+.delete-ticket-button {
+  background-color: #dc3545;
+}
+
+.delete-ticket-button:hover {
+  background-color: #c82333;
+}
+
+.view-ticket-button { /* Nuevo botón "Ver Ticket" */
+  background-color: #28a745;
+}
+
+.view-ticket-button:hover {
+  background-color: #218838;
+}
+
+/* Botones para filtrar tickets */
+#ticket-filters {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.filter-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.filter-button:hover {
+  background-color: #0056b3;
+}
+
+.filter-button.active {
+  background-color: #0056b3;
+}
+
+.filter-button[data-status="todos"] {
+  background-color: #28a745; /* Verde para "Ver Todos" */
+}
+
+.filter-button[data-status="todos"]:hover {
+  background-color: #218838;
+}
+
+.filter-button[data-status="todos"].active {
+  background-color: #1e7e34; /* Verde oscuro para "Ver Todos" activo */
+}
+
+/* Estilos para la interfaz de pestañas */
+.tab-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.tab-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin: 0 5px;
+  font-size: 16px;
+  border-radius: 4px 4px 0 0;
+  transition: background-color 0.3s;
+}
+
+.tab-button:hover {
+  background-color: #0056b3;
+}
+
+.tab-button.active {
+  background-color: #0056b3;
+}
+
+.tab-content {
+  display: none;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Estilos para la vista de imagen del ticket */
+.ticket-format .ticket-image img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Estilos para la exportación de tickets */
+#export-tickets-button {
+  background-color: #17a2b8;
+}
+
+#export-tickets-button:hover {
+  background-color: #138496;
+}
+
+/* Estilos para la ventana modal de asignación de auxiliar */
+.modal .modal-content select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.modal .modal-content button {
+  margin-top: 15px;
+  padding: 10px 15px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+#assign-confirm-button {
+  background-color: #28a745;
+  color: #fff;
+}
+
+#assign-confirm-button:hover {
+  background-color: #218838;
+}
+
+#assign-cancel-button {
+  background-color: #dc3545;
+  color: #fff;
+  margin-left: 10px;
+}
+
+#assign-cancel-button:hover {
+  background-color: #c82333;
+}
+
+/* Estilos para la ventana modal al ver ticket */
+.swal2-modal {
+  max-width: 800px;
+}
+
+.swal2-image {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 /* Estilos para dispositivos móviles */
@@ -288,58 +558,18 @@ section h2 {
     width: 95%;
     margin: 5% auto;
   }
-}
 
-/* Estilos para la tabla */
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+  #ticket-filters .filter-button {
+    width: 100%;
+    margin: 5px 0;
+  }
 
-table, th, td {
-  border: 1px solid #ddd;
-}
+  .tab-button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
 
-th, td {
-  padding: 12px;
-  text-align: left;
-}
-
-th {
-  background-color: #007bff;
-  color: white;
-}
-
-tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-
-tr:hover {
-  background-color: #ddd;
-}
-
-/* Colores según el estado del ticket */
-.status-abierto {
-  background-color: #f8d7da !important; /* Rojo claro */
-}
-
-.status-en-proceso {
-  background-color: #fff3cd !important; /* Amarillo claro */
-}
-
-.status-terminado {
-  background-color: #d4edda !important; /* Verde claro */
-}
-
-/* Estilos para la vista previa de la imagen */
-.image-preview {
-  margin-top: 10px;
-  text-align: center;
-}
-
-.image-preview img {
-  max-width: 100%;
-  max-height: 200px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  .ticket-format {
+    width: 95%;
+  }
 }

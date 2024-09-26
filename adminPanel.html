@@ -5,29 +5,49 @@
   <meta charset="UTF-8">
   <title>Panel de Administración</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- Incluir SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Incluir la biblioteca browser-image-compression -->
+  <script src="https://unpkg.com/browser-image-compression@1.0.15/dist/browser-image-compression.js"></script>
+  <!-- Incluir Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 </head>
 <body>
   <h1>Panel de Administración</h1>
   <button id="logout-button">Cerrar Sesión</button>
 
-  <section id="user-management" class="container">
+  <!-- Contenedor de Pestañas -->
+  <div class="tab-container">
+    <button class="tab-button active" data-tab="user-management">Gestión de Usuarios</button>
+    <button class="tab-button" data-tab="ticket-management">Gestión de Tickets</button>
+  </div>
+
+  <!-- Sección de Gestión de Usuarios -->
+  <section id="user-management" class="tab-content active">
     <h2>Gestión de Usuarios</h2>
     <!-- Formulario para crear usuarios -->
     <form id="create-user-form">
       <label for="new-username">Nombre de Usuario:</label>
       <input type="text" id="new-username" placeholder="Nombre de Usuario" required>
+      
       <label for="new-password">Contraseña:</label>
       <input type="password" id="new-password" placeholder="Contraseña" required>
+      
       <label for="new-role">Rol:</label>
       <select id="new-role">
         <option value="branch">Encargado</option>
         <option value="admin">Administrador</option>
         <option value="auxiliar">Auxiliar</option>
       </select>
+      
       <label for="new-empresa">Empresa:</label>
       <input type="text" id="new-empresa" placeholder="Empresa" required>
+      
       <label for="new-sucursal">Sucursal:</label>
       <input type="text" id="new-sucursal" placeholder="Sucursal" required>
+      
       <button type="submit">Crear Usuario</button>
     </form>
     <div id="users-list">
@@ -35,7 +55,8 @@
     </div>
   </section>
 
-  <section id="ticket-management" class="container">
+  <!-- Sección de Gestión de Tickets -->
+  <section id="ticket-management" class="tab-content">
     <h2>Gestión de Tickets</h2>
     <!-- Botón para crear ticket -->
     <button id="open-create-ticket-modal">Crear Ticket</button>
@@ -43,20 +64,30 @@
     <!-- Modal para crear ticket -->
     <div id="create-ticket-modal" class="modal" style="display: none;">
       <div class="modal-content">
+        <span class="close-modal">&times;</span>
         <h3>Crear Nuevo Ticket</h3>
         <form id="modal-create-ticket-form">
           <label for="modal-ticket-title">Título del Ticket:</label>
           <input type="text" id="modal-ticket-title" placeholder="Título del Ticket" required>
+          
           <label for="modal-ticket-description">Descripción:</label>
           <textarea id="modal-ticket-description" placeholder="Descripción del Ticket" required></textarea>
+          
           <label for="modal-ticket-priority">Prioridad:</label>
           <select id="modal-ticket-priority">
             <option value="alta">Alta</option>
             <option value="media">Media</option>
             <option value="baja">Baja</option>
           </select>
+          
+          <label for="modal-ticket-image">Adjuntar Imagen (Opcional):</label>
+          <input type="file" id="modal-ticket-image" accept="image/*" capture="environment">
+          
+          <!-- Vista previa de la imagen -->
+          <div id="modal-image-preview" class="image-preview"></div>
+          
           <button type="submit">Enviar Ticket</button>
-          <button type="button" id="close-create-ticket-modal">Cancelar</button>
+          <button type="button" class="close-modal-button">Cancelar</button>
         </form>
       </div>
     </div>
@@ -64,8 +95,10 @@
     <!-- Botones para filtrar tickets -->
     <div id="ticket-filters">
       <button class="filter-button" data-status="abierto">Pendientes</button>
-      <button class="filter-button" data-status="En Proceso">En Proceso</button>
-      <button class="filter-button" data-status="Terminado">Terminados</button>
+      <button class="filter-button" data-status="en proceso">En Proceso</button>
+      <button class="filter-button" data-status="terminado">Terminados</button>
+      <!-- Botón "Ver Todos" Añadido -->
+      <button class="filter-button" data-status="todos">Ver Todos</button>
     </div>
 
     <!-- Tabla de tickets -->
@@ -76,6 +109,7 @@
           <th>Fecha de Emisión</th>
           <th>Título</th>
           <th>Estado</th>
+          <th>Asignado a</th>
           <th>Acciones</th>
         </tr>
       </thead>
